@@ -47,7 +47,7 @@ impl Emu {
     pub fn new() -> Self {
         let mut new_emu = Self {
             pc: START_ADDR,
-            ram: [0; NUM_REGS],
+            ram: [0; RAM_SIZE],
             screen: [false; SCREEN_WIDTH * SCREEN_HEIGHT],
             v_reg: [0; NUM_REGS],
             i_reg: 0,
@@ -77,6 +77,20 @@ impl Emu {
         self.ram[..FONTSET_SIZE].copy_from_slice(&FONTSET);
     }
 
+    pub fn get_display(&self) -> &[bool] {
+        &self.screen
+    }
+
+    pub fn keypress(&mut self, idx: usize, pressed: bool) {
+        self.keys[idx] = pressed;
+    }
+
+    pub fn load(&mut self, data: &[u8]) {
+        let start = START_ADDR as usize;
+        let end = (START_ADDR as usize) + data.len();
+        self.ram[start..end].copy_from_slice(data);
+    }
+
     fn push(&mut self, val: u16) {
         self.stack[self.sp as usize] = val;
         self.sp += 1;
@@ -84,7 +98,7 @@ impl Emu {
 
     fn pop(&mut self) -> u16 {
         self.sp -= 1;
-        self.stack[self.sp as usize];
+        self.stack[self.sp as usize]
     }
 
     pub fn tick_timers(&mut self) {
@@ -119,7 +133,7 @@ impl Emu {
         let digit1 = (op & 0xF000) >> 12;
         let digit2 = (op & 0x0F00) >> 8;
         let digit3 = (op & 0x00F0) >> 4;
-        let digit4 = (op & 0x000F);
+        let digit4 = op & 0x000F;
 
         match (digit1, digit2, digit3, digit4) {
             // NOP
